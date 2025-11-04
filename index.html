@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عداد البكالوريا وحساب وقت الدراسة</title>
+    <title>عداد البكالوريا وحساب وقت الدراسة - جميع الشعب</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -34,22 +34,32 @@
             display: inline-block;
             border-radius: 5px;
         }
-        .time-input {
+        hr {
+            border: 0;
+            height: 1px;
+            background: #ccc;
+            margin: 30px 0;
+        }
+        .controls-section {
             margin: 20px 0;
             padding: 15px;
             background: #e9ecef;
             border-radius: 8px;
             text-align: right;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
         }
-        .time-input label, .time-input input {
+        .controls-section label, .controls-section select, .controls-section input {
             font-size: 1.1em;
-            margin-left: 10px;
+            margin: 5px 10px;
         }
-        .time-input input {
+        .controls-section input, .controls-section select {
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            width: 100px;
+            width: 180px;
             text-align: center;
         }
         #study-hours-results {
@@ -94,12 +104,26 @@
 
     <hr>
 
-    <div class="time-input">
-        <h2>حساب وقت الدراسة المتبقي لكل مادة 📚</h2>
-        <label for="daily-hours">عدد ساعات العمل/الدراسة اليومي (X):</label>
-        <input type="text" id="daily-hours" value="10" min="1" onchange="calculateStudyHours()">
-        <span>ساعة</span>
-        <p style="font-size: 0.9em; color: #6c757d; margin-top: 10px;">سيتم توزيع الوقت المتبقي بناءً على معاملات المواد.</p>
+    <div class="controls-section">
+        <h2 style="width: 100%; text-align: center; color: #5cb85c;">حساب توزيع وقت الدراسة المتبقي 📚</h2>
+
+        <div style="margin: 10px 0;">
+            <label for="branch-select">اختر الشعبة:</label>
+            <select id="branch-select" onchange="calculateStudyHours()">
+                <option value="science">علوم تجريبية</option>
+                <option value="arts">آداب وفلسفة</option>
+                <option value="math_tech">تقني رياضي</option>
+                <option value="management">تسيير واقتصاد</option>
+                <option value="foreign_lang">لغات أجنبية</option>
+            </select>
+        </div>
+
+        <div style="margin: 10px 0;">
+            <label for="daily-hours">عدد ساعات العمل/الدراسة اليومي (X):</label>
+            <input type="text" id="daily-hours" value="6" min="1" oninput="calculateStudyHours()">
+            <span>ساعة</span>
+        </div>
+        <p style="font-size: 0.9em; color: #6c757d; margin-top: 10px; width: 100%;">سيتم توزيع الوقت المتبقي بناءً على عدد الأيام المتبقية ومعاملات المواد.</p>
     </div>
 
     <div id="study-hours-results">
@@ -111,55 +135,50 @@
 
 <script>
     // **1. العداد التنازلي**
-    // التاريخ المستهدف: 15 جوان 2026
     const targetDate = new Date("June 15, 2026 00:00:00").getTime();
 
     function updateCountdown() {
         const now = new Date().getTime();
         const distance = targetDate - now;
 
-        // حساب الزمن للوحدات
         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-        // عرض النتيجة
         document.getElementById("countdown").innerHTML = `${days} يـوم | ${hours} سـاعة | ${minutes} دقـيقة | ${seconds} ثـانية`;
 
-        // إذا انتهى العد
         if (distance < 0) {
             clearInterval(countdownInterval);
             document.getElementById("countdown").innerHTML = "انتهى الوقت! بالتوفيق في الامتحانات!";
         }
     }
 
-    // تحديث العداد كل ثانية
-    updateCountdown(); // للتشغيل الفوري
+    updateCountdown();
     const countdownInterval = setInterval(updateCountdown, 1000);
 
 
-    // **2. حساب وقت الدراسة المتبقي**
-    const subjects = [
-        { name: "العلوم الطبيعية", coefficient: 6 },
-        { name: "الرياضيات", coefficient: 5 },
-        { name: "الفيزياء", coefficient: 5 },
-        { name: "اللغة العربية", coefficient: 3 },
-        { name: "الانجليزية", coefficient: 2 },
-        { name: "الفرنسية", coefficient: 2 },
-        { name: "العلوم الإسلامية", coefficient: 2 },
-        { name: "التاريخ والجغرافيا", coefficient: 2 },
-        { name: "الفلسفة", coefficient: 2 }
-    ];
+    // **2. بيانات المواد والمعاملات لجميع الشعب**
+    const branches = {
+        "science": { subjects: [ { name: "علوم طبيعية", coeff: 6 }, { name: "رياضيات", coeff: 5 }, { name: "فيزياء", coeff: 5 }, { name: "لغة عربية", coeff: 3 }, { name: "تاريخ وجغرافيا", coeff: 2 }, { name: "علوم إسلامية", coeff: 2 }, { name: "فلسفة", coeff: 2 }, { name: "لغة فرنسية", coeff: 2 }, { name: "لغة إنجليزية", coeff: 2 }, { name: "تربية بدنية", coeff: 1, optional: true } ] },
+        "arts": { subjects: [ { name: "فلسفة", coeff: 6 }, { name: "لغة عربية وآدابها", coeff: 6 }, { name: "تاريخ وجغرافيا", coeff: 4 }, { name: "لغة فرنسية", coeff: 3 }, { name: "لغة إنجليزية", coeff: 3 }, { name: "علوم إسلامية", coeff: 2 }, { name: "رياضيات", coeff: 2 }, { name: "علوم طبيعية", coeff: 2 }, { name: "تربية بدنية", coeff: 1, optional: true } ] },
+        "math_tech": { subjects: [ { name: "رياضيات", coeff: 6 }, { name: "هندسة (تخصص)", coeff: 6 }, { name: "فيزياء", coeff: 5 }, { name: "لغة عربية", coeff: 3 }, { name: "لغة فرنسية", coeff: 2 }, { name: "لغة إنجليزية", coeff: 2 }, { name: "تاريخ وجغرافيا", coeff: 2 }, { name: "علوم إسلامية", coeff: 2 }, { name: "فلسفة", coeff: 2 }, { name: "تربية بدنية", coeff: 1, optional: true } ] },
+        "management": { subjects: [ { name: "تسيير واقتصاد", coeff: 7 }, { name: "محاسبة", coeff: 5 }, { name: "رياضيات", coeff: 3 }, { name: "قانون", coeff: 2 }, { name: "لغة عربية", coeff: 3 }, { name: "تاريخ وجغرافيا", coeff: 3 }, { name: "فلسفة", coeff: 2 }, { name: "لغة فرنسية", coeff: 2 }, { name: "لغة إنجليزية", coeff: 2 }, { name: "علوم إسلامية", coeff: 2 }, { name: "تربية بدنية", coeff: 1, optional: true } ] },
+        "foreign_lang": { subjects: [ { name: "لغة أجنبية 1", coeff: 5 }, { name: "لغة أجنبية 2", coeff: 5 }, { name: "لغة عربية وآدابها", coeff: 3 }, { name: "لغة أجنبية 3", coeff: 4 }, { name: "تاريخ وجغرافيا", coeff: 3 }, { name: "فلسفة", coeff: 2 }, { name: "علوم إسلامية", coeff: 2 }, { name: "رياضيات", coeff: 2 }, { name: "علوم طبيعية", coeff: 2 }, { name: "تربية بدنية", coeff: 1, optional: true } ] }
+    };
 
+    // **3. دالة حساب وقت الدراسة المتبقي**
     function calculateStudyHours() {
         const dailyHoursInput = document.getElementById('daily-hours');
+        const branchSelect = document.getElementById('branch-select');
+        const selectedBranch = branchSelect.value;
+        const currentSubjects = branches[selectedBranch].subjects;
+
         const dailyStudyHours = parseFloat(dailyHoursInput.value);
 
         // التحقق من الإدخال
         if (isNaN(dailyStudyHours) || dailyStudyHours <= 0) {
-            dailyHoursInput.value = 1; // تعيين قيمة افتراضية في حالة الخطأ
-            calculateStudyHours();
+            dailyHoursInput.value = 6;
             return;
         }
 
@@ -169,23 +188,25 @@
         // إجمالي عدد الأيام المتبقية
         const remainingDays = Math.ceil(distanceMs / (1000 * 60 * 60 * 24));
 
-        // إجمالي عدد ساعات الدراسة المتبقية (Total Study Hours)
+        // إجمالي عدد ساعات الدراسة المتبقية
         const totalStudyHours = remainingDays * dailyStudyHours;
 
-        // مجموع المعاملات
-        const totalCoefficient = subjects.reduce((sum, subject) => sum + subject.coefficient, 0);
+        // مجموع المعاملات الأساسية (تجاهل الاختياري مؤقتًا)
+        const totalCoefficient = currentSubjects.reduce((sum, subject) => sum + subject.coeff, 0);
 
         const hoursList = document.getElementById('hours-list');
-        hoursList.innerHTML = ''; // تفريغ القائمة قبل إعادة التعبئة
+        hoursList.innerHTML = ''; // تفريغ القائمة
 
-        subjects.forEach(subject => {
+        currentSubjects.forEach(subject => {
+            // المادة الاختيارية (مثل التربية البدنية) لا يتم تضمينها هنا لتوزيع الوقت
+            if (subject.optional) return; 
+
             // حساب الساعات المخصصة للمادة
-            const subjectHours = (subject.coefficient / totalCoefficient) * totalStudyHours;
+            const subjectHours = (subject.coeff / totalCoefficient) * totalStudyHours;
             
-            // إنشاء عنصر القائمة
             const listItem = document.createElement('li');
             listItem.innerHTML = `
-                <span class="subject-name">${subject.name} (معامل ${subject.coefficient})</span>
+                <span class="subject-name">${subject.name} (معامل ${subject.coeff})</span>
                 <span class="hours-left">${Math.round(subjectHours)} ساعة متبقية</span>
             `;
             hoursList.appendChild(listItem);
@@ -194,7 +215,7 @@
         // إضافة المجموع الكلي أسفل القائمة
         const totalItem = document.createElement('li');
         totalItem.style.fontWeight = 'bold';
-        totalItem.style.backgroundColor = '#d4edda'; // لون للخلفية
+        totalItem.style.backgroundColor = '#d4edda';
         totalItem.innerHTML = `
             <span class="subject-name">إجمالي ساعات الدراسة المتبقية</span>
             <span class="hours-left">${Math.round(totalStudyHours)} ساعة</span>
@@ -203,7 +224,7 @@
 
     }
 
-    // تشغيل الحساب عند تحميل الصفحة
+    // تشغيل الحساب عند تحميل الصفحة (افتراضياً علوم تجريبية و 6 ساعات)
     window.onload = calculateStudyHours;
 </script>
 
